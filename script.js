@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
             zoom: 10,
             controls: [] // убираем все стандартные элементы управления
         });
-
+map.controls.add('geolocationControl');
         // === Клик по карте ===
         map.events.add("click", function (e) {
             const coords = e.get("coords");
@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         map.controls.add(geolocationButton);
-
+          
         // === Автоматическое определение местоположения на мобильных устройствах ===
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         if (isMobile && navigator.geolocation) {
