@@ -49,7 +49,7 @@ function initMap() {
                 placeholderContent: 'Поиск дома в выбранном городе'
             }
         });
-        map.controls.add(searchControl);
+      //===  map.controls.add(searchControl); ===
 
         // === geolocationControl с обработкой locationchange ===
         const geolocationControl = new ymaps.control.GeolocationControl();
