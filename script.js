@@ -56,13 +56,12 @@ document.addEventListener("DOMContentLoaded", function () {
         "Экибастуз": [51.723476, 75.322524]
     };
 
-         ymaps.ready(initMap);
+             ymaps.ready(initMap);
 
     function initMap() {
         const citySelect = document.getElementById("city");
         const defaultCity = citySelect.value;
         const defaultCityCenter = cityCenters[defaultCity];
-
         if (!defaultCityCenter) {
             console.error("Не удалось найти координаты для города по умолчанию:", defaultCity);
             return;
@@ -71,16 +70,10 @@ document.addEventListener("DOMContentLoaded", function () {
         map = new ymaps.Map("map", {
             center: defaultCityCenter,
             zoom: 10,
-            controls: [] // убираем все стандартные элементы управления
-        });
-map.controls.add('geolocationControl');
-        // === Клик по карте ===
-        map.events.add("click", function (e) {
-            const coords = e.get("coords");
-            setPlacemarkAndAddress(coords);
+            controls: []
         });
 
-        // === Поиск дома через SearchControl ===
+        // === Добавляем SearchControl ===
         const searchControl = new ymaps.control.SearchControl({
             options: {
                 noPlacemark: true,
@@ -93,6 +86,26 @@ map.controls.add('geolocationControl');
         });
         map.controls.add(searchControl);
 
+        // === Добавляем geolocationControl с кастомной логикой ===
+        const geolocationControl = new ymaps.control.GeolocationControl();
+        map.controls.add(geolocationControl);
+
+        geolocationControl.events.add('locationchange', function (e) {
+            const position = e.get('position');
+            if (position) {
+                const coords = position.geometry.getCoordinates();
+                map.setCenter(coords, 16);
+                setPlacemarkAndAddress(coords);
+            }
+        });
+
+        // === Клик по карте ===
+        map.events.add("click", function (e) {
+            const coords = e.get("coords");
+            setPlacemarkAndAddress(coords);
+        });
+
+        // === Поиск дома через SearchControl ===
         searchControl.events.add("resultselect", function (e) {
             const index = e.get("index");
             searchControl.getResult(index).then(function (res) {
@@ -102,7 +115,7 @@ map.controls.add('geolocationControl');
             });
         });
 
-        // === Обновление области поиска при смене города ===
+        // === Смена города ===
         citySelect.addEventListener("change", function () {
             const selectedCity = this.value;
             const selectedCityCenter = cityCenters[selectedCity];
@@ -115,7 +128,7 @@ map.controls.add('geolocationControl');
             }
         });
 
-        // === Геолокация с вашей логикой ===
+        // === Геолокация кнопкой (остаётся как резервная опция) ===
         const geolocationButton = new ymaps.control.Button({
             data: {
                 content: "Мое местоположение",
@@ -150,7 +163,7 @@ map.controls.add('geolocationControl');
         });
 
         map.controls.add(geolocationButton);
-          
+
         // === Автоматическое определение местоположения на мобильных устройствах ===
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         if (isMobile && navigator.geolocation) {
@@ -188,7 +201,6 @@ map.controls.add('geolocationControl');
         ymaps.geocode(coords).then(function (res) {
             const firstGeoObject = res.geoObjects.get(0);
             const address = firstGeoObject.getAddressLine();
-
             document.getElementById("address").value = address;
             document.getElementById("coordinates").value = coords.join(", ");
             const preview = document.getElementById("selected-address");
@@ -240,11 +252,13 @@ map.controls.add('geolocationControl');
         }
         const formData = new FormData(event.target);
         if (submitBtn) submitBtn.disabled = true;
+
         try {
             const response = await fetch("https://script.google.com/macros/s/AKfycbyvGVEFMym5wPSWUHnfhl_KN_oDnhsgvmRGSohGK1CmUF8JeHkNl_Pd8HLuglQSlSpa/exec",  {
                 method: "POST",
                 body: formData,
             });
+
             if (response.ok) {
                 alert("Спасибо за заявку! Мы рассмотрим её в ближайшие несколько рабочих дней.\n\nЕсли большинство жителей Вашего дома подадут заявки на подключение «Интернет Дома», мы сможем приоритизировать строительство сети по Вашему адресу.\nСпасибо за доверие!");
                 if (submitBtn) {
@@ -254,8 +268,10 @@ map.controls.add('geolocationControl');
                 resetForm(false);
                 return;
             }
+
             alert("Ошибка при отправке. Пожалуйста, попробуйте ещё раз позже.");
             if (submitBtn) submitBtn.disabled = false;
+
         } catch (error) {
             console.error("Ошибка:", error);
             alert("Произошла ошибка при отправке данных.");
@@ -273,6 +289,7 @@ map.controls.add('geolocationControl');
         if (preview) preview.innerText = 'Адрес не выбран';
         const confirmation = document.getElementById("confirmation");
         if (confirmation) confirmation.classList.add("hidden");
+
         if (!preserveDisable) {
             const submitBtn = document.querySelector("#submissionForm button[type='submit']");
             if (submitBtn) {
