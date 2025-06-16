@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     let map, placemark;
-    let cityCenters = {}; // Здесь будут храниться координаты после геокодирования
+    let cityCenters = {}; // Здесь храниться координаты после геокодирования
 
     ymaps.ready(initMap);
 
